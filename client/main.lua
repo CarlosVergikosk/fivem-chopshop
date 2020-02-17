@@ -1,10 +1,10 @@
 ESX = nil
-local disablecontrols = false
+local nocontrols = false
 local allowedchop = true
-local payout = math.random(10,35)
-local clientcooldown = false
+local cooldown = false
 local chopstarted = false
 local station = nil
+local reward = math.random(10,35)
 
 Citizen.CreateThread(function()
 	while ESX == nil do
@@ -48,11 +48,11 @@ end)
 
 Citizen.CreateThread(function()
 	while true do
-		if clientcooldown then
+		if cooldown then
 			allowedchop = false
 			Citizen.Wait(2000)
 			allowedchop = true
-			clientcooldown = false
+			cooldown = false
 		end 
 		Citizen.Wait(1000)
 	end
@@ -61,7 +61,7 @@ end)
 Citizen.CreateThread(function()
 	while true do
 		Citizen.Wait(10)
-		if disablecontrols then
+		if nocontrols then
 			DisableControlAction(0, 24, true) -- Attack
 			DisableControlAction(0, 257, true) -- Attack 2
 			DisableControlAction(0, 25, true) -- Aim
@@ -123,7 +123,7 @@ Citizen.CreateThread(function ()
 						if GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), x,y,z, true ) < 2.5 and IsPedStill(GetPlayerPed(-1)) and not chopdoors[i].chopdoor then --1.2
 							DrawText3Ds(x,y,z, tostring("~w~[~g~E~w~]" .. chopdoors[i].PartLabel))
 							if(IsControlJustPressed(1, 38)) then
-								disablecontrols = true
+								nocontrols = true
 								chopdoors[i].chopdoor = true
 								ChopDoors(i)
 							end
@@ -147,12 +147,12 @@ Citizen.CreateThread(function ()
 					local x,y,z = table.unpack(ChopCarLocation[station].Chop)
 					DrawText3Ds(x,y,z, "~w~[~g~E~w~] Remover")
 					if(IsControlJustPressed(0, 38)) then
-						if not clientcooldown then
+						if not cooldown then
 							StartChopCar()
 							Citizen.Wait(1000)
-							clientcooldown = true
+							cooldown = true
 						end
-						if clientcooldown and not chopstarted then
+						if cooldown and not chopstarted then
 							exports['b1g_notify']:Notify('false', 'Wait a couple of minutes.')
 						end
 					end
@@ -190,7 +190,7 @@ function ChopDoors(i)
 				ClearPedTasksImmediately(plyPed)
 				chopdoors[i].chopdoor = false
 				chopdoors[i].doorgone = true
-				disablecontrols = false
+				nocontrols = false
 				local PackageObject = CreateObject(GetHashKey(chopdoors[i].PartProp), 1.0, 1.0, 1.0, 1, 1, 0)
 				Citizen.Wait(1000)
 				HoldingPart(PackageObject, i)
@@ -291,15 +291,15 @@ function HoldingPart(partID, i)
 			DrawText3Ds(x,y,z, tostring("~w~~g~[E]~w~ Sell Pieces"))
 			if DistanceCheck <= 2.0 then
 				if IsControlJustPressed(0, 38) then
-					disablecontrols = true
+					nocontrols = true
 					DeleteEntity(partID)
 					ClearPedTasksImmediately(PlayerPedId())
 					Packaging = false
 					if chopdoors[i].doorgone then
-						TriggerServerEvent('b1g_chopshop:success', payout)
+						TriggerServerEvent('b1g_chopshop:success', reward)
 						chopdoors[i].doorgone = false
 						chopdoors[i].doordelivered = true
-						disablecontrols = false
+						nocontrols = false
 						exports['b1g_notify']:Notify('true', 'Piece Sell Successfully')
 						if chopdoors[#chopdoors].doordelivered then
 							EndChopping()
