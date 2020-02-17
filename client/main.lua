@@ -13,6 +13,10 @@ Citizen.CreateThread(function()
 	end
 end)
 
+ChopCarLocation = {
+	[1] = { Chop = vector3(-557.64, -1695.82, 19.16), Sell = vector3(-556.36, -1704.7, 19.04)}
+}
+
 chopdoors = {
 	[1] = {chopdoor = false, doorgone = false, doordelivered = false, CarParts = "wheel_lf",   PartLabel = "Tire", 		PartProp = "prop_wheel_tyre", 	 PartBone = 28422, PartX = 0.0,PartY = 0.5,PartZ = -0.05,	PartxR = 0.0, PartyR = 0.0, PartzR = 0.0},
 	[2] = {chopdoor = false, doorgone = false, doordelivered = false, CarParts = "wheel_rf",   PartLabel = "Tire", 		PartProp = "prop_wheel_tyre",	 PartBone = 28422, PartX = 0.0,PartY = 0.5,PartZ = -0.05,	PartxR = 0.0, PartyR = 0.0, PartzR = 0.0},
@@ -20,10 +24,6 @@ chopdoors = {
 	[4] = {chopdoor = false, doorgone = false, doordelivered = false, CarParts = "wheel_rr",   PartLabel = "Tire", 		PartProp = "prop_wheel_tyre", 	 PartBone = 28422, PartX = 0.0,PartY = 0.5,PartZ = -0.05,	PartxR = 0.0, PartyR = 0.0, PartzR = 0.0},
 	[5] = {chopdoor = false, doorgone = false, doordelivered = false, CarParts = "engine", 	   PartLabel = "Battery", 	PartProp = "prop_car_battery_01",PartBone = 28422, PartX = 0.0,PartY = 0.5,PartZ = -0.05,	PartxR = 0.0, PartyR = 0.0, PartzR = 0.0},
 	[6] = {chopdoor = false, doorgone = false, doordelivered = false, CarParts = "engine", 	   PartLabel = "Engine", 	PartProp = "prop_car_engine_01", PartBone = 28422, PartX = 0.0,PartY = 0.5,PartZ = -0.05,	PartxR = 0.0, PartyR = 0.0, PartzR = 0.0}
-}
-
-ChopCarLocation = {  --- Coords [x] = Door Coords [x2] = location if need be
-	[1] = { Chop = vector3(-557.64, -1695.82, 19.16), Sell = vector3(-556.36, -1704.7, 19.04)}
 }
 
 Citizen.CreateThread(function()
@@ -39,7 +39,7 @@ Citizen.CreateThread(function()
 		end
 		if station ~= nil then
 			if GetDistanceBetweenCoords(GetEntityCoords(PlayerPedId()), ChopCarLocation[station].Chop, true) >= 50 and chopstarted then 
-				tofaraway()
+				away()
 			end
 		end
 		Citizen.Wait(1500)
@@ -58,54 +58,13 @@ Citizen.CreateThread(function()
 	end
 end)
 
-Citizen.CreateThread(function()
-	while true do
-		Citizen.Wait(10)
-		if nocontrols then
-			DisableControlAction(0, 24, true) -- Attack
-			DisableControlAction(0, 257, true) -- Attack 2
-			DisableControlAction(0, 25, true) -- Aim
-			DisableControlAction(0, 263, true) -- Melee Attack 1
-			DisableControlAction(0, 32, true) -- W
-			DisableControlAction(0, 34, true) -- A
-			DisableControlAction(0, 38, true) -- A
-			DisableControlAction(0, 31, true) -- S (fault in Keys table!)
-			DisableControlAction(0, 30, true) -- D (fault in Keys table!)
-
-			DisableControlAction(0, 45, true) -- Reload
-			DisableControlAction(0, 44, true) -- Cover
-			DisableControlAction(0, 37, true) -- Select Weapon
-			DisableControlAction(0, 23, true) -- Also 'enter'?
-
-			DisableControlAction(0, 289, true) -- Inventory
-			DisableControlAction(0, 170, true) -- Animations
-			DisableControlAction(0, 167, true) -- Job
-
-			DisableControlAction(0, 0, true) -- Disable changing view
-			DisableControlAction(0, 26, true) -- Disable looking behind
-			DisableControlAction(0, 73, true) -- Disable clearing animation
-			DisableControlAction(2, 199, true) -- Disable pause screen
-
-			DisableControlAction(0, 59, true) -- Disable steering in vehicle
-			DisableControlAction(0, 71, true) -- Disable driving forward in vehicle
-			DisableControlAction(0, 72, true) -- Disable reversing in vehicle
-
-			DisableControlAction(2, 36, true) -- Disable going stealth
-
-			DisableControlAction(0, 47, true)  -- Disable weapon
-			DisableControlAction(0, 264, true) -- Disable melee
-			DisableControlAction(0, 257, true) -- Disable melee
-			DisableControlAction(0, 140, true) -- Disable melee
-			DisableControlAction(0, 141, true) -- Disable melee
-			DisableControlAction(0, 142, true) -- Disable melee
-			DisableControlAction(0, 143, true) -- Disable melee
-			DisableControlAction(0, 75, true)  -- Disable exit vehicle
-			DisableControlAction(27, 75, true) -- Disable exit vehicle
-		else
-			Citizen.Wait(500)
-		end
-	end
-end)
+function away()
+	local vehchopping = GetClosestVehicle(ChopCarLocation[station].Chop, 4.001, 0, 70)
+	chopstarted = false
+	station = nil
+	DeleteEntity(vehchopping)
+	exports['b1g_notify']:Notify('false', 'Go Away!')
+end
 
 Citizen.CreateThread(function ()
 	while true do
@@ -166,6 +125,24 @@ Citizen.CreateThread(function ()
 	end
 end)
 
+function StartChopCar()
+	local ped = GetPlayerPed(-1)
+	local veh2 = GetVehiclePedIsIn (GetPlayerPed (-1), true)
+	local vehiclePedIsIn = GetVehiclePedIsIn(ped, false)
+	SetEntityCoords(veh2, ChopCarLocation[station].Chop)
+	SetEntityHeading(veh2, 27.77)
+	SetVehicleDoorOpen(veh2, 0, false, true)
+	SetVehicleDoorOpen(veh2, 1, false, true)
+	SetVehicleDoorOpen(veh2, 2, false, true)
+	SetVehicleDoorOpen(veh2, 3, false, true)
+	SetVehicleDoorOpen(veh2, 4, false, true)
+	SetVehicleDoorOpen(veh2, 5, false, true)
+	TaskLeaveVehicle(ped, vehiclePedIsIn, 256)
+	SetVehicleDoorsLocked(veh2, 2)
+	Citizen.Wait(1000)
+	chopstarted = true
+end
+
 function ChopDoors(i)
 	local player = PlayerId()
 	local plyPed = GetPlayerPed(player)
@@ -214,31 +191,54 @@ function EndChopping()
 
 end
 
-function tofaraway()
-	local vehchopping = GetClosestVehicle(ChopCarLocation[station].Chop, 4.001, 0, 70)
-	chopstarted = false
-	station = nil
-	DeleteEntity(vehchopping)
-	exports['b1g_notify']:Notify('false', 'Go Away!')
-end
+Citizen.CreateThread(function()
+	while true do
+		Citizen.Wait(10)
+		if nocontrols then
+			DisableControlAction(0, 24, true) -- Attack
+			DisableControlAction(0, 257, true) -- Attack 2
+			DisableControlAction(0, 25, true) -- Aim
+			DisableControlAction(0, 263, true) -- Melee Attack 1
+			DisableControlAction(0, 32, true) -- W
+			DisableControlAction(0, 34, true) -- A
+			DisableControlAction(0, 38, true) -- A
+			DisableControlAction(0, 31, true) -- S (fault in Keys table!)
+			DisableControlAction(0, 30, true) -- D (fault in Keys table!)
 
-function StartChopCar()
-	local ped = GetPlayerPed(-1)
-	local veh2 = GetVehiclePedIsIn (GetPlayerPed (-1), true)
-	local vehiclePedIsIn = GetVehiclePedIsIn(ped, false)
-	SetEntityCoords(veh2, ChopCarLocation[station].Chop)
-	SetEntityHeading(veh2, 27.77)
-	SetVehicleDoorOpen(veh2, 0, false, true)
-	SetVehicleDoorOpen(veh2, 1, false, true)
-	SetVehicleDoorOpen(veh2, 2, false, true)
-	SetVehicleDoorOpen(veh2, 3, false, true)
-	SetVehicleDoorOpen(veh2, 4, false, true)
-	SetVehicleDoorOpen(veh2, 5, false, true)
-	TaskLeaveVehicle(ped, vehiclePedIsIn, 256)
-	SetVehicleDoorsLocked(veh2, 2)
-	Citizen.Wait(1000)
-	chopstarted = true
-end
+			DisableControlAction(0, 45, true) -- Reload
+			DisableControlAction(0, 44, true) -- Cover
+			DisableControlAction(0, 37, true) -- Select Weapon
+			DisableControlAction(0, 23, true) -- Also 'enter'?
+
+			DisableControlAction(0, 289, true) -- Inventory
+			DisableControlAction(0, 170, true) -- Animations
+			DisableControlAction(0, 167, true) -- Job
+
+			DisableControlAction(0, 0, true) -- Disable changing view
+			DisableControlAction(0, 26, true) -- Disable looking behind
+			DisableControlAction(0, 73, true) -- Disable clearing animation
+			DisableControlAction(2, 199, true) -- Disable pause screen
+
+			DisableControlAction(0, 59, true) -- Disable steering in vehicle
+			DisableControlAction(0, 71, true) -- Disable driving forward in vehicle
+			DisableControlAction(0, 72, true) -- Disable reversing in vehicle
+
+			DisableControlAction(2, 36, true) -- Disable going stealth
+
+			DisableControlAction(0, 47, true)  -- Disable weapon
+			DisableControlAction(0, 264, true) -- Disable melee
+			DisableControlAction(0, 257, true) -- Disable melee
+			DisableControlAction(0, 140, true) -- Disable melee
+			DisableControlAction(0, 141, true) -- Disable melee
+			DisableControlAction(0, 142, true) -- Disable melee
+			DisableControlAction(0, 143, true) -- Disable melee
+			DisableControlAction(0, 75, true)  -- Disable exit vehicle
+			DisableControlAction(27, 75, true) -- Disable exit vehicle
+		else
+			Citizen.Wait(500)
+		end
+	end
+end)
 
 function DrawText3Ds(x, y, z, text)
     local onScreen,_x,_y=World3dToScreen2d(x,y,z)
