@@ -4,7 +4,6 @@ local allowedchop = true
 local cooldown = false
 local chopstarted = false
 local station = nil
-local reward = math.random(10,35)
 
 Citizen.CreateThread(function()
 	while ESX == nil do
@@ -296,7 +295,7 @@ function HoldingPart(partID, i)
 					ClearPedTasksImmediately(PlayerPedId())
 					Packaging = false
 					if chopdoors[i].doorgone then
-						TriggerServerEvent('b1g_chopshop:success', reward)
+						TriggerServerEvent('b1g_chopshop:success')
 						chopdoors[i].doorgone = false
 						chopdoors[i].doordelivered = true
 						nocontrols = false
